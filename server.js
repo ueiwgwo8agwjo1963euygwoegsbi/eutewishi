@@ -28,7 +28,7 @@ const PORT = process.env.PORT || 3000;
 
 // Allow localhost for development, but block other domains
 const ALLOWED_HOSTS = [
-    'jrmph-freesmsapi.onrender.com', // Your official Render domain
+    'https://jrmph-freesmsapi-bvyo.onrender.com', // Your official Render domain
     'localhost:3000', // Development
     'localhost', // Development
     '127.0.0.1:3000', // Development
