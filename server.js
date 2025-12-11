@@ -60,8 +60,7 @@ app.use('/api/', limiter);
 // Parse JSON bodies
 app.use(express.json());
 
-// Host-based protection    },
-    standard middleware
+// Host-based protection
 const hostProtection = (req, res, next) => {
     const allowedHosts = [
         'jrmph-freesmsapi-bvyo.onrender.com',
