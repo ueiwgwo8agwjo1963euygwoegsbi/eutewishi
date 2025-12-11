@@ -18,7 +18,7 @@ const qs = require('qs');
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.env || 3000;
 
 
 // ============================================================================
@@ -128,7 +128,7 @@ app.use((req, res, next) => {
 
 
 // ============================================================================
-// UTILITY FUNCTIONS (FROM ORIGINAL SCRIPT - UNCHANGED)
+// UTILITY FUNCTIONS (Mula sa orihinal na script)
 // ============================================================================
 
 
@@ -196,7 +196,7 @@ function validateInput(data) {
 
 
 // ============================================================================
-// SMS API HEADERS (UNCHANGED)
+// SMS API HEADERS (Hindi binago)
 // ============================================================================
 
 
@@ -206,14 +206,6 @@ const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Accept': 'application/json'
 };
-
-
-// ============================================================================
-// NO AUTHENTICATION MIDDLEWARE (PUBLIC ACCESS - UNCHANGED)
-// ============================================================================
-
-
-// Public access - no authentication required
 
 
 // ============================================================================
@@ -460,7 +452,7 @@ function generateDocsHtml(req) {
                     <div class="border border-gray-200 p-6 rounded-lg bg-gray-50">
                         <div class="flex items-center space-x-4 mb-3">
                             <span class="method-badge get">GET</span>
-                            <span class="path-display">/</span> /api
+                            <span class="path-display">/api</span>
                         </div>
                         <p class="text-gray-600 mb-3">Root and `/api` endpoints return a brief manifest of the service, version, and primary routes.</p>
                         <div class="code-block text-blue-400">
@@ -699,7 +691,7 @@ app.post('/api/send-sms', async (req, res) => {
         console.log(`[SMS] Sending to ${normalizedNumber} from ${senderName} (IP: ${req.ip})`);
 
 
-        // Prepare SMS data (from original script - logic unchanged)
+        // Prepare SMS data (mula sa orihinal na script)
         const suffix = '-freed0m';
         const credits = '\n\nSent via Jrmapi';
         const withSuffix = message.endsWith(suffix) ? message : `${message} ${suffix}`;
@@ -797,7 +789,7 @@ app.post('/api/send-sms', async (req, res) => {
 });
 
 
-// API documentation endpoint (UI ENHANCED)
+// API documentation endpoint
 app.get('/api/docs', (req, res) => {
     const docs = generateDocsHtml(req);
     res.setHeader('Content-Type', 'text/html');
