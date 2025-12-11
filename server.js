@@ -1,58 +1,44 @@
-#!/usr/bin/env node
-
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const axios = require('axios');
-const qs = require('qs');
-const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ============================================================================
-// HOST PROTECTION MIDDLEWARE - Prevents API cloning/scraping
-// ============================================================================
-
-// Allow localhost for development, but block other domains
-const ALLOWED_HOSTS = [
-    'jrmph-freesmsapi-bvyo.onrender.com',  // Your official Render domain
-    'localhost:3000',              // Development
-    'localhost',                   // Development
-    '127.0.0.1:3000',             // Development
-    '127.0.0.1'                   // Development
-];
-
-app.use((req, res, next) => {
-    const host = req.get('host');
-    const isAllowed = ALLOWED_HOSTS.some(allowedHost => {
-        if (allowedHost === 'localhost:3000') {
-            return host === 'localhost:3000' || host === 'localhost' || host === '127.0.0.1:3000' || host === '127.0.0.1';
-        }
-        return host === allowedHost;
-    });
-
-    if (!isAllowed) {
-        console.warn(`🚫 BLOCKED: Unauthorized host attempted access - Host: ${host}, IP: ${req.ip}`);
-        return res.status(403).json({
-            error: 'Access Denied',
-            message: 'This API is only available from authorized domains.',
-            yourHost: host,
-            allowedHosts: ALLOWED_HOSTS.filter(h => h !== 'localhost:3000' && h !== 'localhost' && h !== '127.0.0.1:3000' && h !== '127.0.0.1')
-        });
-    }
-
-    next();
-});
-
-// ============================================================================
-// SECURITY MIDDLEWARE
-// ============================================================================
-
-// Security headers
+// Security middleware
 app.use(helmet());
+
+// CORS configuration - only allow specific domains
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Define allowed hosts
+        const allowedHosts = [
+            'jrmph-freesmsapi-bvyo.onrender.com',
+            'localhost:3000',
+            '127.0.0.1:3000',
+            'localhost',
+            '127.0.0.1'
+        ];
+        
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // Check if origin is allowed
+        if (allowedHosts.includes(origin)) {
+            return callback(null, true);
+        }
+        
+        // Block unauthorized hosts
+        callback(new Error('Not allowed by CORS'), false);
+    },
+    credentials: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 
 // Rate limiting - 100 requests per 15 minutes
 const limiter = rateLimit({
@@ -66,376 +52,238 @@ const limiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
+
 app.use('/api/', limiter);
 
-// Body parsing
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use('/api/', limiter);
 
-// CORS configuration - Only allow official domain
-app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [
-        'https://jrmph-freesmsapi-bvyo.onrender.com',
-        'http://localhost:3000',
-        'http://localhost:8080'
-    ],
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-}));
+// Parse JSON bodies
+app.use(express.json());
 
-// ============================================================================
-// STATIC FILE SERVING
-// ============================================================================
-
-// Serve static files from public directory
-app.use(express.static('public'));
-
-// Documentation routes
-app.get('/api/docs', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'docs.html'));
-});
-
-app.get('/docs', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'docs.html'));
-});
-
-// Root route - serve landing page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-function randomString(len) {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    return Array.from({ length: len }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-}
-
-function randomGmail() {
-    return `${randomString(8)}@gmail.com`;
-}
-
-function randomUID() {
-    return randomString(28);
-}
-
-function randomDeviceId() {
-    return randomString(16);
-}
-
-function validatePhoneNumber(number) {
-    const patterns = [
-        /^(\+63|63|9)\d{9,10}$/,  // Philippine formats
-        /^\+?[1-9]\d{1,14}$/      // General international format
+// Host-based protection    },
+    standard middleware
+const hostProtection = (req, res, next) => {
+    const allowedHosts = [
+        'jrmph-freesmsapi-bvyo.onrender.com',
+        'localhost:3000',
+        '127.0.0.1:3000',
+        'localhost',
+        '127.0.0.1'
     ];
-    return patterns.some(pattern => pattern.test(number));
-}
-
-function normalizePhone(number) {
-    if (!number) return null;
     
-    // Remove all non-digit characters
-    const digits = number.replace(/\D/g, '');
+    const host = req.get('host');
     
-    // Handle Philippine numbers
-    if (digits.startsWith('63')) {
-        return '+63' + digits.substring(2);
-    } else if (digits.startsWith('0')) {
-        return '+63' + digits.substring(1);
-    } else if (digits.length === 10 && digits.startsWith('9')) {
-        return '+63' + digits.substring(1);
+    if (!allowedHosts.includes(host)) {
+        return res.status(403).json({
+            error: 'Access Denied',
+            message: 'This API is only available from authorized domains.',
+            yourHost: host,
+            allowedHosts: ['jrmph-freesmsapi-bvyo.onrender.com']
+        });
     }
     
-    // For other international formats, add + if not present
-    if (digits.length >= 10 && digits.length <= 15) {
-        return number.startsWith('+') ? number : '+' + digits;
-    }
-    
-    return null;
-}
-
-function validateInput(data) {
-    const errors = [];
-    
-    if (!data.number || typeof data.number !== 'string') {
-        errors.push('Phone number is required and must be a string');
-    } else if (!validatePhoneNumber(data.number)) {
-        errors.push('Please provide a valid Philippine phone number');
-    }
-    
-    if (!data.message || typeof data.message !== 'string') {
-        errors.push('Message is required and must be a string');
-    } else if (data.message.length > 160) {
-        errors.push('Message must be 160 characters or less');
-    }
-    
-    return errors;
-}
-
-// ============================================================================
-// SMS API HEADERS
-// ============================================================================
-
-const HEADERS = {
-    'sec-ch-ua': '"Not)A;Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'Accept': 'application/json, text/plain, */*',
-    'Content-Type': 'application/json',
-    'Origin': 'https://www.teams灵.com',
-    'Referer': 'https://www.teams灵.com/',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-site',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+    next();
 };
 
-// ============================================================================
-// API ROUTES
-// ============================================================================
+// Apply host protection to API routes
+app.use('/api/', hostProtection);
+
+// Phone number validation and normalization
+function validateAndNormalizePhoneNumber(phoneNumber) {
+    if (!phoneNumber) return false;
+    
+    // Remove all non-digit characters
+    const digits = phoneNumber.replace(/\D/g, '');
+    
+    // Philippine number patterns
+    if (digits.startsWith('63') && digits.length === 12) {
+        // Already in international format with country code
+        return '+' + digits;
+    } else if (digits.startsWith('0') && digits.length === 11) {
+        // Local format (09xxxxxxxxx)
+        return '+63' + digits.substring(1);
+    } else if (digits.length === 10 && digits.startsWith('9')) {
+        // Local format without leading 0 (9123456789)
+        return '+63' + digits;
+    }
+    
+    // Return false if doesn't match Philippine patterns
+    return false;
+}
+
+// M2Tech SMS sending function
+async function sendM2TechSMS(to, message, senderName) {
+    try {
+        const startTime = Date.now();
+        
+        // Normalize phone number
+        const normalizedPhone = validateAndNormalizePhoneNumber(to);
+        if (!normalizedPhone) {
+            throw new Error('Invalid phone number format. Please use international format (+639123456789) or local format (09123456789).');
+        }
+        
+        // Prepare M2Tech request
+        const m2techData = {
+            device_id: '2207117BPG',
+            number: normalizedPhone,
+            message: message,
+            sender_name: senderName || 'FreeSMS'
+        };
+        
+        console.log('Sending SMS via M2Tech:', m2techData);
+        
+        // Make request to M2Tech
+        const response = await axios.post('https://sms.m2techtronix.com/v13/sms.php', m2techData, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            timeout: 10000 // 10 seconds timeout
+        });
+        
+        const responseTime = Date.now() - startTime;
+        
+        console.log('M2Tech Response:', response.data);
+        
+        // Check if SMS was sent successfully
+        if (response.data && (response.data.status === 'success' || response.data.message || response.data.success)) {
+            return {
+                success: true,
+                message: 'SMS sent successfully',
+                timestamp: new Date().toISOString(),
+                to: normalizedPhone,
+                responseTime: `${responseTime}ms`,
+                metadata: {
+                    messageLength: message.length,
+                    senderName: senderName || 'FreeSMS'
+                }
+            };
+        } else {
+            throw new Error(response.data?.message || response.data?.error || 'Unknown M2Tech error');
+        }
+        
+    } catch (error) {
+        console.error('M2Tech SMS Error:', error.message);
+        
+        // Handle different error types
+        if (error.code === 'ECONNABORTED') {
+            throw new Error('Request timeout - SMS service unavailable');
+        } else if (error.response) {
+            // M2Tech returned an error response
+            throw new Error(error.response.data?.message || error.response.data?.error || 'M2Tech service error');
+        } else if (error.request) {
+            // Network error
+            throw new Error('Network error - Cannot reach SMS service');
+        } else {
+            throw new Error(error.message);
+        }
+    }
+}
 
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({
         status: 'API is running',
         timestamp: new Date().toISOString(),
-        version: '1.0.0'
+        version: '1.0.0-m2tech',
+        smsProvider: 'm2techtronix'
     });
 });
 
-// API info endpoint
-app.get('/api', (req, res) => {
-    res.json({
-        name: 'JRM FreeSMS API',
-        version: '1.0.0',
-        description: 'Secure SMS API with host-based protection and rate limiting',
-        author: 'Jhames Martin',
-        endpoints: {
-            health: 'GET /health',
-            sendSms: 'POST /api/send-sms',
-            info: 'GET /api',
-            docs: 'GET /api/docs'
-        },
-        features: {
-            rateLimit: '100 requests per 15 minutes per IP',
-            cors: 'enabled for authorized domains',
-            security: 'helmet enabled with security headers',
-            authentication: 'host-based protection (no API key required)',
-            inputValidation: 'phone numbers and messages validated'
-        },
-        allowedHosts: ALLOWED_HOSTS,
-        documentation: `${req.protocol}://${req.get('host')}/docs`
-    });
-});
-
-// Send SMS endpoint
+// Main SMS sending endpoint
 app.post('/api/send-sms', async (req, res) => {
     const startTime = Date.now();
-
+    
     try {
-        // Check host protection (already handled by middleware)
-        if (!ALLOWED_HOSTS.includes(req.get('host')) && 
-            !ALLOWED_HOSTS.some(host => host.includes('localhost') && req.get('host').includes('localhost'))) {
-            return res.status(403).json({
-                error: 'Access Denied',
-                message: 'This API is only available from authorized domains.',
-                yourHost: req.get('host'),
-                allowedHosts: ALLOWED_HOSTS.filter(h => !h.includes('localhost'))
-            });
-        }
-
-        const { to, message } = req.body;
-        const normalizedNumber = normalizePhone(to);
+        const { to, message, senderName } = req.body;
         
-        if (!normalizedNumber) {
+        // Input validation
+        if (!to || !message) {
             return res.status(400).json({
                 success: false,
-                error: 'Invalid phone number format',
-                message: 'Please provide a valid Philippine phone number',
-                timestamp: new Date().toISOString(),
-                responseTime: `${Date.now() - startTime}ms`
+                error: 'Invalid input',
+                message: 'Both phone number and message are required'
             });
         }
-
-        if (!message || message.length === 0) {
+        
+        if (!senderName || senderName.trim() === '') {
             return res.status(400).json({
                 success: false,
-                error: 'Message required',
-                message: 'Message content cannot be empty',
-                timestamp: new Date().toISOString(),
-                responseTime: `${Date.now() - startTime}ms`
+                error: 'Sender name required',
+                message: 'Sender name cannot be empty'
             });
         }
-
+        
+        // Validate message length
         if (message.length > 160) {
             return res.status(400).json({
                 success: false,
                 error: 'Message too long',
-                message: 'Message must be 160 characters or less',
-                timestamp: new Date().toISOString(),
-                responseTime: `${Date.now() - startTime}ms`
+                message: 'Message must be 160 characters or less'
             });
         }
-
-        console.log(`[SMS] Sending to ${normalizedNumber} from JRM FreeSMS API (IP: ${req.ip})`);
-
-        // Prepare SMS data (from original script)
-        const suffix = '-freed0m';
-        const phoneWithSuffix = normalizedNumber + suffix;
         
-        const smsData = qs.stringify({
-            contacts: phoneWithSuffix,
-            smsMessage: message,
-            passwd: randomString(10) + '@',
-            gadgets: randomString(8),
-            lockcode: randomString(8),
-            wap: randomString(8),
-            mobile: randomString(10),
-            email: randomGmail(),
-            pid: randomString(10),
-            rccpro: randomString(20),
-            uids: randomString(20),
-            utids: randomString(20),
-            ccus: randomString(20),
-            hash: randomString(30),
-            mode: 'c',
-            cc: 'PH',
-            lc: 'en',
-            scec: 'iso',
-            pl: '3',
-            pi: randomString(10),
-            pd: randomGmail(),
-            ps: randomString(15),
-            pp: randomString(10),
-            pt: '90',
-            rtype: 'prepay',
-            format: 'exec',
-            t: randomString(20),
-            api_hash: randomString(32)
-        });
-
-        const response = await axios.post('https://www.teams灵.com/ajax/send/sms/send', smsData, {
-            headers: {
-                ...HEADERS,
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Content-Length': Buffer.byteLength(smsData)
-            },
-            timeout: 30000
-        });
-
-        const responseTime = Date.now() - startTime;
-
-        if (response.data && (response.data.success === true || response.data.status === 'success')) {
-            console.log(`[SMS] ✅ Successfully sent to ${normalizedNumber}`);
-            
-            res.json({
-                success: true,
-                message: 'SMS sent successfully',
-                timestamp: new Date().toISOString(),
-                to: normalizedNumber,
-                responseTime: `${responseTime}ms`,
-                metadata: {
-                    messageLength: message.length
-                }
-            });
-        } else {
-            console.warn(`[SMS] Failed to send to ${normalizedNumber}. Response:`, response.data);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to send SMS via external service',
-                message: 'The upstream SMS service returned an error',
-                timestamp: new Date().toISOString(),
-                responseTime: `${responseTime}ms`,
-                details: response.data
-            });
-        }
-
+        console.log('SMS Request:', { to, message: message.substring(0, 50) + '...', senderName });
+        
+        // Send SMS via M2Tech
+        const result = await sendM2TechSMS(to, message, senderName);
+        
+        // Log successful request
+        console.log(`SMS sent successfully to ${result.to} in ${result.responseTime}`);
+        
+        res.json(result);
+        
     } catch (error) {
-        const responseTime = Date.now() - startTime;
-        console.error('[SMS] Error sending SMS:', error.message);
+        console.error('SMS Error:', error.message);
         
-        if (error.code === 'ECONNABORTED') {
-            res.status(500).json({
-                success: false,
-                error: 'Request timeout',
-                message: 'SMS service request timed out',
-                timestamp: new Date().toISOString(),
-                responseTime: `${responseTime}ms`
-            });
-        } else if (error.response) {
-            res.status(500).json({
-                success: false,
-                error: 'External service error',
-                message: 'SMS service returned an error',
-                timestamp: new Date().toISOString(),
-                responseTime: `${responseTime}ms`,
-                serviceStatus: error.response.status
-            });
-        } else {
-            res.status(500).json({
-                success: false,
-                error: 'Internal server error',
-                message: 'An error occurred while sending the SMS',
-                timestamp: new Date().toISOString(),
-                responseTime: `${responseTime}ms`
-            });
-        }
+        // Return appropriate error response
+        res.status(500).json({
+            success: false,
+            error: 'SMS sending failed',
+            message: error.message,
+            timestamp: new Date().toISOString(),
+            responseTime: `${Date.now() - startTime}ms`
+        });
     }
 });
 
-// ============================================================================
-// ERROR HANDLERS
-// ============================================================================
+// Serve static files from public directory
+app.use(express.static('public'));
+
+// Root route - serve index.html
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/public/index.html');
+});
+
+// Docs route - serve docs.html
+app.get('/docs', (req, res) => {
+    res.sendFile(__dirname + '/public/docs.html');
+});
 
 // 404 handler
-app.use((req, res) => {
+app.use('*', (req, res) => {
     res.status(404).json({
         error: 'Not Found',
-        message: `Endpoint ${req.method} ${req.path} not found`,
-        availableEndpoints: [
-            'GET /health',
-            'GET /api',
-            'POST /api/send-sms',
-            'GET /api/docs'
-        ]
+        message: 'The requested endpoint does not exist'
     });
 });
 
 // Global error handler
 app.use((error, req, res, next) => {
-    console.error('[ERROR]', error);
+    console.error('Global Error:', error);
+    
     res.status(500).json({
         error: 'Internal Server Error',
-        message: 'An unexpected error occurred',
-        timestamp: new Date().toISOString()
+        message: 'Something went wrong'
     });
 });
 
-// ============================================================================
-// SERVER STARTUP
-// ============================================================================
-
+// Start server
 app.listen(PORT, () => {
-    console.log(`\n🚀 JRM FreeSMS API Server Started`);
-    console.log(`================================`);
-    console.log(`   Server:  http://localhost:${PORT}`);
-    console.log(`   Health:  http://localhost:${PORT}/health`);
-    console.log(`   API:     http://localhost:${PORT}/api`);
-    console.log(`   Docs:    http://localhost:${PORT}/docs`);
-    console.log(`   SMS:     http://localhost:${PORT}/api/send-sms`);
-    console.log(`\n🔐 Security Features:`);
-    console.log(`   ✅ Host Protection (Domain-based)`);
-    console.log(`   ✅ Rate Limiting (100 requests/15min per IP)`);
-    console.log(`   ✅ CORS Protection`);
-    console.log(`   ✅ Input Validation`);
-    console.log(`   ✅ Security Headers (Helmet.js)`);
-    console.log(`\n📚 Documentation: http://localhost:${PORT}/docs`);
-    console.log(`\n✅ Ready to use - No API key required!\n`);
+    console.log(`🚀 JRM FreeSMS API Server running on port ${PORT}`);
+    console.log(`📱 SMS Provider: M2Tech Tronix`);
+    console.log(`🔒 CORS enabled for: jrmph-freesmsapi-bvyo.onrender.com`);
+    console.log(`⚡ Rate limit: 100 requests per 15 minutes`);
+    console.log(`🌐 Health check: http://localhost:${PORT}/health`);
 });
 
 module.exports = app;
