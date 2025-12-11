@@ -28,11 +28,12 @@ const PORT = process.env.PORT || 3000;
 
 // Allow localhost for development, but block other domains
 const ALLOWED_HOSTS = [
-    'https://jrmph-freesmsapi-bvyo.onrender.com', // Your official Render domain
-    'localhost:3000', // Development
-    'localhost', // Development
-    '127.0.0.1:3000', // Development
-    '127.0.0.1' // Development
+    'jrmph-freesmsapi.onrender.com',        // Your original official Render domain
+    'jrmph-freesmsapi-bvyo.onrender.com',   // *** NEW RENDER URL ADDED HERE ***
+    'localhost:3000',                       // Development
+    'localhost',                            // Development
+    '127.0.0.1:3000',                       // Development
+    '127.0.0.1'                             // Development
 ];
 
 
@@ -85,6 +86,7 @@ app.use(helmet({
 app.use(cors({
     origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [
         'https://jrmph-freesmsapi.onrender.com', // Official domain
+        'https://jrmph-freesmsapi-bvyo.onrender.com', // New URL
         'http://localhost:3000', // Development
         'http://localhost', // Development
         'http://127.0.0.1:3000' // Development
@@ -421,7 +423,7 @@ app.get('/api/docs', (req, res) => {
         }
         /* Color Palette: Indigo for info/GET, Emerald for success/POST */
         .post { background-color: #059669; color: white; } /* Emerald-600 */
-        .get { background-color: #4f46e5; color: white; } /* Indigo-600 */
+        .get { background-color: #4f46e5; color: white; } } /* Indigo-600 */
         .path-display {
             background-color: #e5e7eb;
             color: #4b5563;
