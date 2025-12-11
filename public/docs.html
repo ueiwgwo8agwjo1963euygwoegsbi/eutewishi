@@ -1,1 +1,435 @@
-#
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Critical for mobile responsiveness -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JRM FreeSMS API Documentation - v1.0.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .code-block {
+            background-color: #1f2937; /* Dark Slate */
+            color: #e5e7eb; /* Light Gray text */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto; /* Ensures horizontal scroll for code on mobile */
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: relative; 
+        }
+        .method-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.375rem;
+        }
+        /* Color Palette: Indigo for info/GET, Emerald for success/POST */
+        .post { background-color: #059669; color: white; } /* Emerald-600 */
+        .get { background-color: #4f46e5; color: white; } /* Indigo-600 */
+        .path-display {
+            background-color: #e5e7eb;
+            color: #4b5563;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-family: monospace;
+        }
+        .section-header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .copy-btn {
+            background-color: #3b82f6;
+        }
+        .copy-btn:hover {
+            background-color: #2563eb;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+<div class="min-h-screen bg-gray-50">
+    <!-- Header/Navigation -->
+    <header class="bg-slate-900 shadow-2xl">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <!-- Icon: Speech Bubble/Message -->
+                <svg class="w-8 h-8 text-indigo-400" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.505A9.761 9.761 0 0112 4c4.97 0 9 3.582 9 8z"/></svg>
+                <h1 class="text-3xl font-extrabold text-white tracking-tight">
+                    JRM FreeSMS API Reference
+                </h1>
+            </div>
+            <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                <span class="text-sm font-medium text-slate-300 bg-slate-700 px-3 py-1 rounded-full shadow-inner">Version 1.0.0</span>
+                <a href="/" class="text-sm font-medium text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-full transition duration-150">← Back to API</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div class="space-y-12">
+
+            <!-- 1. Overview & Base URL -->
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border-t-4 border-indigo-500">
+                <h2 class="text-2xl font-semibold text-gray-900 section-header">Overview & Quick Start</h2>
+                <p class="text-gray-600 mb-6">
+                    This is a secure, rate-limited public API for sending SMS messages. The API is designed for high reliability and includes robust security features like host-based protection, rate limiting, CORS protection, and input validation.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Base Endpoint</h3>
+                        <div class="code-block !bg-gray-700 text-yellow-300 text-sm md:text-base" id="base-url-block">
+                            <pre id="base-url">[[BASE_URL]]</pre>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Authentication Status</h3>
+                        <div class="bg-green-100 text-green-800 font-medium px-4 py-3 rounded-lg flex items-center shadow-inner text-sm">
+                            <!-- Icon: Lock Open -->
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944c-1.278 0-2.529.288-3.67.844-1.141.556-2.138 1.378-2.948 2.378S3.333 7.6 3.09 8.889C2.846 10.178 2.89 11.511 3.2 12.822c.311 1.311.916 2.56 1.764 3.652 1.696 2.186 3.992 3.652 6.551 4.363 2.559-.711 4.855-2.177 6.551-4.363.848-1.092 1.453-2.341 1.764-3.652.31-1.311.354-2.644.11-3.933A11.955 11.955 0 0112 2.944z"/></svg>
+                            Public Access: No API Key Required (Host-Protected)
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Security Features</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-800 mb-2">🔒 Host Protection</h4>
+                        <p class="text-blue-700 text-sm">Only authorized domains can access the API. Prevents unauthorized hosting and cloning.</p>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-orange-800 mb-2">⚡ Rate Limiting</h4>
+                        <p class="text-orange-700 text-sm">100 requests per 15 minutes per IP address to prevent abuse.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Send SMS Endpoint -->
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-900 section-header">Endpoint: Send SMS</h2>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center mb-4 space-y-2 sm:space-y-0 sm:space-x-4">
+                    <span class="method-badge post">POST</span>
+                    <span class="path-display font-mono text-lg">/api/send-sms</span>
+                </div>
+                <p class="text-gray-600 mb-6">Initiates the transmission of an SMS message to a specified mobile number. All inputs are validated for format and length.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Request -->
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3">Request Body (application/json)</h3>
+                        <div class="code-block text-sm">
+                            <pre>{
+    "to": "+639123456789",
+    "message": "Hello from JRM FreeSMS API!"
+}</pre>
+                        </div>
+
+                        <h4 class="text-lg font-semibold text-gray-700 mt-6 mb-3">Parameters</h4>
+                        <div class="overflow-x-auto rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-200 border border-gray-200 text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parameter</th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Req.</th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap font-medium text-gray-900">to</td>
+                                        <td class="px-3 py-2 whitespace-nowrap">string</td>
+                                        <td class="px-3 py-2 whitespace-nowrap"><span class="text-green-600 font-bold">YES</span></td>
+                                        <td class="px-3 py-2">Target phone number. Supports international format (+63) or local (09xxxxxxxxx).</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap font-medium text-gray-900">message</td>
+                                        <td class="px-3 py-2 whitespace-nowrap">string</td>
+                                        <td class="px-3 py-2 whitespace-nowrap"><span class="text-green-600 font-bold">YES</span></td>
+                                        <td class="px-3 py-2">The message content (max 160 characters).</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Response -->
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3">Success Response (200 OK)</h3>
+                        <div class="code-block !bg-green-800 text-green-200 text-sm">
+                            <pre>{
+    "success": true,
+    "message": "SMS sent successfully",
+    "timestamp": "2025-12-11T20:34:10.000Z",
+    "to": "+639123456789",
+    "responseTime": "245ms",
+    "metadata": {
+        "messageLength": 32
+    }
+}</pre>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-3">Error Responses</h3>
+
+                        <h4 class="text-lg font-semibold text-gray-700 mb-2">403 Forbidden (Access Denied)</h4>
+                        <div class="code-block !bg-red-800 text-red-200 text-sm">
+                            <pre>{
+    "error": "Access Denied",
+    "message": "This API is only available from authorized domains.",
+    "yourHost": "unauthorized-domain.com",
+    "allowedHosts": ["jrmph-freesmsapi.onrender.com"]
+}</pre>
+                        </div>
+
+                        <h4 class="text-lg font-semibold text-gray-700 mb-2">429 Too Many Requests</h4>
+                        <div class="code-block !bg-orange-800 text-orange-200 text-sm">
+                            <pre>{
+    "error": "Too Many Requests",
+    "message": "Rate limit exceeded. Try again later.",
+    "retryAfter": 900
+}</pre>
+                        </div>
+
+                        <h4 class="text-lg font-semibold text-gray-700 mb-2">400 Bad Request</h4>
+                        <div class="code-block !bg-red-800 text-red-200 text-sm">
+                            <pre>{
+    "success": false,
+    "error": "Invalid phone number format",
+    "message": "Please provide a valid Philippine phone number"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Health Check Endpoint -->
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-900 section-header">Endpoint: Health Check</h2>
+
+                <div class="flex flex-col sm:flex-row items-start sm:items-center mb-4 space-y-2 sm:space-y-0 sm:space-x-4">
+                    <span class="method-badge get">GET</span>
+                    <span class="path-display font-mono text-lg">/health</span>
+                </div>
+                <p class="text-gray-600 mb-6">Check the API service status and availability.</p>
+
+                <h3 class="text-xl font-semibold text-gray-800 mb-3">Response (200 OK)</h3>
+                <div class="code-block !bg-green-800 text-green-200 text-sm">
+                    <pre>{
+    "status": "API is running",
+    "timestamp": "2025-12-11T20:34:10.000Z",
+    "version": "1.0.0"
+}</pre>
+                </div>
+            </div>
+
+            <!-- 4. Code Examples -->
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-gray-900 section-header">Code Examples</h2>
+                <p class="text-gray-600 mb-6">Easily integrate the <code>POST /api/send-sms</code> endpoint into your application using common technologies.</p>
+
+                <!-- cURL Example -->
+                <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-3">cURL</h3>
+                <div class="code-block relative text-sm">
+                    <pre id="curl-example">curl -X POST "[[BASE_URL]]/api/send-sms" \
+-H "Content-Type: application/json" \
+-d '{
+    "to": "+639123456789",
+    "message": "Hello from JRM FreeSMS API!"
+}'</pre>
+                    <button class="copy-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-md text-xs transition duration-150" onclick="copyCode(this)">Copy</button>
+                </div>
+
+                <!-- JavaScript Fetch Example -->
+                <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-3">JavaScript (Fetch)</h3>
+                <div class="code-block relative text-sm">
+                    <pre id="js-example">const response = await fetch('[[BASE_URL]]/api/send-sms', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        to: '+639123456789',
+        message: 'Hello from JRM FreeSMS API!'
+    })
+});
+
+const result = await response.json();
+console.log(result);</pre>
+                    <button class="copy-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-md text-xs transition duration-150" onclick="copyCode(this)">Copy</button>
+                </div>
+
+                <!-- Python Example -->
+                <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-3">Python (requests)</h3>
+                <div class="code-block relative text-sm">
+                    <pre id="python-example">import requests
+
+url = "[[BASE_URL]]/api/send-sms"
+data = {
+    "to": "+639123456789",
+    "message": "Hello from JRM FreeSMS API!"
+}
+
+response = requests.post(url, json=data)
+print(response.json())</pre>
+                    <button class="copy-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-md text-xs transition duration-150" onclick="copyCode(this)">Copy</button>
+                </div>
+
+                <!-- PHP Example -->
+                <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-3">PHP (cURL)</h3>
+                <div class="code-block relative text-sm">
+                    <pre id="php-example">$url = "[[BASE_URL]]/api/send-sms";
+$data = [
+    "to" => "+639123456789",
+    "message" => "Hello from JRM FreeSMS API!"
+];
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+echo $response;</pre>
+                    <button class="copy-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-md text-xs transition duration-150" onclick="copyCode(this)">Copy</button>
+                </div>
+            </div>
+
+            <!-- 5. Domain Protection Info -->
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border-t-4 border-orange-500">
+                <h2 class="text-2xl font-semibold text-gray-900 section-header">Domain Protection</h2>
+                <p class="text-gray-600 mb-6">
+                    Your API is protected by host-based access control. This means only requests from authorized domains will be processed.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">✅ Allowed Domains</h3>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <ul class="text-green-800 text-sm space-y-1">
+                                <li>• <code>jrmph-freesmsapi.onrender.com</code></li>
+                                <li>• <code>localhost:3000</code> (development)</li>
+                                <li>• <code>127.0.0.1:3000</code> (development)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">❌ Blocked Domains</h3>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <ul class="text-red-800 text-sm space-y-1">
+                                <li>• Any other domain</li>
+                                <li>• Cloned/copied versions</li>
+                                <li>• Direct IP access</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 class="font-semibold text-blue-800 mb-2">💡 How to Use</h4>
+                    <p class="text-blue-700 text-sm">
+                        Simply make requests to <code>jrmph-freesmsapi.onrender.com</code> from any website, mobile app, or service. 
+                        The API will work as long as you use the correct domain. This prevents unauthorized hosting while allowing public usage.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 6. Author & Contact -->
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border-t-4 border-indigo-500">
+                <h2 class="text-2xl font-semibold text-gray-900 section-header">Author & Contact</h2>
+                <div class="flex flex-col space-y-4 text-gray-700">
+                    <p class="text-lg font-bold">Made by <span class="text-indigo-600">Jhames Martin</span></p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex items-center space-x-3">
+                            <!-- GitHub Icon -->
+                            <svg class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.865-.013-1.7c-2.782.602-3.369-1.341-3.369-1.341-.454-1.157-1.11-1.464-1.11-1.464-.908-.621.069-.608.069-.608 1.004.07 1.531 1.028 1.531 1.028.892 1.529 2.341 1.087 2.91.829.091-.643.352-1.087.641-1.334-2.223-.251-4.555-1.113-4.555-4.957 0-1.091.39-1.984 1.029-2.682-.103-.251-.446-1.268.098-2.646 0 0 .84-.268 2.75 1.026A9.558 9.558 0 0112 5.042c.85.004 1.705.116 2.515.337 1.91-1.294 2.75-1.026 2.75-1.026.542 1.378.199 2.395.096 2.646.64.698 1.028 1.591 1.028 2.682 0 3.854-2.333 4.702-4.564 4.954.357.307.675.915.675 1.848 0 1.333-.012 2.41-.012 2.748 0 .267.18.577.688.484C19.141 20.197 22 16.442 22 12.017 22 6.484 17.523 2 12 2z" clip-rule="evenodd" /></svg>
+                            <a href="https://github.com/jrmph" target="_blank" class="text-indigo-600 hover:text-indigo-800 transition duration-150 font-medium">github.com/jrmph</a>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <!-- Facebook Icon -->
+                            <svg class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.656 9.126 8.432 9.873v-7.291H7.573V12h2.859V9.43c0-2.811 1.693-4.333 4.332-4.333 1.198 0 2.378.212 2.378.212v2.661h-1.353c-1.35 0-1.772.839-1.772 1.688V12h3.046l-.485 2.583h-2.561v7.29A10.043 10.043 0 0022 12z"/></svg>
+                            <a href="https://www.facebook.com/jhames.rhonnielle.martin" target="_blank" class="text-indigo-600 hover:text-indigo-800 transition duration-150 font-medium">Facebook Profile</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+        &copy; 2025 JRM FreeSMS API by Jhames Martin. All Rights Reserved.
+    </footer>
+</div>
+
+<script>
+    // Set base URL dynamically
+    const baseUrl = window.location.origin;
+    document.getElementById('base-url').textContent = baseUrl;
+    
+    // Replace [[BASE_URL]] placeholders in examples
+    const examples = ['curl-example', 'js-example', 'python-example', 'php-example'];
+    examples.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = element.textContent.replace(/\[\[BASE_URL\]\]/g, baseUrl);
+        }
+    });
+
+    function copyCode(button) {
+        const code = button.previousElementSibling;
+        const text = code.textContent; 
+
+        // Use document.execCommand('copy') as a fallback/alternative for clipboard API
+        // This is necessary in some restricted iframe environments.
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = text.trim();
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        let success = false;
+        try {
+            success = document.execCommand('copy');
+        } catch (err) {
+            console.error('execCommand failed:', err);
+        }
+        document.body.removeChild(tempTextArea);
+
+        if (success) {
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            button.classList.add('bg-green-500', 'hover:bg-green-600');
+
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('bg-green-500', 'hover:bg-green-600');
+                button.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            }, 2000);
+        } else {
+            console.error('Copy failed.');
+            button.textContent = 'Copy Failed';
+            button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            button.classList.add('bg-red-500', 'hover:bg-red-600');
+            setTimeout(() => {
+                button.textContent = 'Copy';
+                button.classList.remove('bg-red-500', 'hover:bg-red-600');
+                button.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            }, 2000);
+        }
+    }
+</script>
+
+</body>
+</html>
