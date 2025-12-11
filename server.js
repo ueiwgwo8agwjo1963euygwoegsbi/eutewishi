@@ -29,7 +29,7 @@ const PORT = process.env.PORT || 3000;
 // Allow localhost for development, but block other domains
 const ALLOWED_HOSTS = [
     'jrmph-freesmsapi.onrender.com',        // Your original official Render domain
-    'jrmph-freesmsapi-bvyo.onrender.com',   // *** NEW RENDER URL ADDED HERE ***
+    'jrmph-freesmsapi-bvyo.onrender.com',   // New Render URL
     'localhost:3000',                       // Development
     'localhost',                            // Development
     '127.0.0.1:3000',                       // Development
@@ -217,185 +217,16 @@ const headers = {
 
 
 // ============================================================================
-// API ROUTES (LOGIC UNCHANGED)
+// DOCUMENTATION GENERATION FUNCTION
 // ============================================================================
 
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0',
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development',
-        features: {
-            rateLimit: '100 requests per 15 minutes',
-            cors: 'enabled',
-            security: 'helmet enabled',
-            authentication: 'public access'
-        }
-    });
-});
-
-
-// API info endpoint
-app.get('/api', (req, res) => {
-    res.json({
-        name: 'SMS API Service',
-        version: '1.0.0',
-        description: 'Secure SMS API with CORS support and rate limiting',
-        author: 'Jhames',
-        endpoints: {
-            health: 'GET /api/health',
-            info: 'GET /api',
-            sendSMS: 'POST /api/send-sms',
-            docs: 'GET /api/docs'
-        },
-        authentication: {
-            type: 'None',
-            description: 'Public access - no authentication required'
-        },
-        rateLimit: {
-            windowMs: 15 * 60 * 1000,
-            maxRequests: 100
-        }
-    });
-});
-
-
-// Send SMS endpoint
-app.post('/api/send-sms', async (req, res) => {
-    const startTime = Date.now();
-    try {
-        // Validate input
-        const errors = validateInput(req.body);
-        if (errors.length > 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Validation failed',
-                details: errors,
-                timestamp: new Date().toISOString()
-            });
-        }
-
-
-        const { number, senderName, message } = req.body;
-        const normalizedNumber = normalizePhone(number);
-        if (!normalizedNumber) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid phone number format',
-                timestamp: new Date().toISOString()
-            });
-        }
-
-
-        console.log(`[SMS] Sending to ${normalizedNumber} from ${senderName} (IP: ${req.ip})`);
-
-
-        // Prepare SMS data (from original script - logic unchanged)
-        const suffix = '-freed0m';
-        const credits = '\n\nSent via Jrmapi';
-        const withSuffix = message.endsWith(suffix) ? message : `${message} ${suffix}`;
-        const finalText = `${withSuffix}${credits}`;
-
-
-        const commandArray = [
-            'free.text.sms',
-            '421',
-            normalizedNumber,
-            '2207117BPG',
-            'fuT8-dobSdyEFRuwiHrxiz:APA91bHNbeMP4HxJR-eBEAS0lf9fyBPg-HWWd21A9davPtqxmU-J-TTQWf28KXsWnnTnEAoriWq3TFG8Xdcp83C6GrwGka4sTd_6qnlqbfN4gP82YaTgvvg',
-            finalText
-        ];
-
-
-        const data = qs.stringify({
-            UID: randomUID(),
-            humottaee: 'Processing',
-            Email: randomGmail(),
-            '$Oj0O%K7zi2j18E': JSON.stringify(commandArray),
-            device_id: randomDeviceId(),
-            Photo: 'https://lh3.googleusercontent.com/a/ACg8ocJyIdNL-vWOcm_v4Enq2PRZRcNaU_c8Xt0DJ1LNvmtKDiVQ-A=s96-c',
-            Name: senderName
-        });
-
-
-        // Send SMS request
-        const response = await axios.post(
-            'https://sms.m2techtronix.com/v13/sms.php',
-            data,
-            {
-                headers: headers,
-                timeout: 15000,
-                validateStatus: function (status) {
-                    return status < 500; // Only throw on 5xx errors
-                }
-            }
-        );
-
-
-        const responseTime = Date.now() - startTime;
-
-
-        if (response.data && (response.data.success === true || response.data.status === 'success')) {
-            console.log(`[SMS] Successfully sent to ${normalizedNumber} in ${responseTime}ms`);
-            res.json({
-                success: true,
-                message: 'SMS sent successfully',
-                timestamp: new Date().toISOString(),
-                to: normalizedNumber,
-                responseTime: `${responseTime}ms`,
-                metadata: {
-                    senderName,
-                    messageLength: message.length
-                }
-            });
-        } else {
-            console.warn(`[SMS] Failed to send to ${normalizedNumber}. Response:`, response.data);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to send SMS',
-                message: 'SMS service returned an error',
-                timestamp: new Date().toISOString(),
-                responseTime: `${responseTime}ms`
-            });
-        }
-
-
-    } catch (error) {
-        const responseTime = Date.now() - startTime;
-        console.error('[SMS] Error sending SMS:', error.message);
-        if (error.code === 'ECONNABORTED') {
-            return res.status(408).json({
-                success: false,
-                error: 'Request timeout',
-                message: 'SMS service request timed out',
-                timestamp: new Date().toISOString(),
-                responseTime: `${responseTime}ms`
-            });
-        }
-        res.status(500).json({
-            success: false,
-            error: 'Internal server error',
-            message: 'An error occurred while sending the SMS',
-            timestamp: new Date().toISOString(),
-            responseTime: `${responseTime}ms`
-        });
-    }
-
-});
-
-
-// API documentation endpoint (UI ENHANCED)
-app.get('/api/docs', (req, res) => {
+function generateDocsHtml(req) {
     const baseUrl = `${req.protocol}://${req.get('host')}/api`;
-    const docs = `
+
+    return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMS API Reference - v1.0.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -589,7 +420,7 @@ app.get('/api/docs', (req, res) => {
     "success": false,
     "error": "Validation failed",
     "details": [
-        "Message must be 160 characters or less"
+        "Phone number is required"
     ],
     "timestamp": "2025-12-11T17:20:21.000Z"
 }</pre>
@@ -599,8 +430,8 @@ app.get('/api/docs', (req, res) => {
                         <div class="code-block !bg-red-800 text-red-200">
                             <pre>{
     "success": false,
-    "error": "Internal server error",
-    "message": "An error occurred while sending the SMS",
+    "error": "Failed to send SMS via external service",
+    "message": "The upstream SMS service returned an error or unexpected response.",
     "timestamp": "2025-12-11T17:20:21.000Z",
     "responseTime": "500ms"
 }</pre>
@@ -787,32 +618,204 @@ print(result)</pre>
 </body>
 </html>
 `;
-
-    res.setHeader('Content-Type', 'text/html');
-    res.send(docs);
-});
+}
 
 
-// Root endpoint
-app.get('/', (req, res) => {
+// ============================================================================
+// API ROUTES 
+// ============================================================================
+
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
     res.json({
-        message: 'SMS API Service',
+        status: 'OK',
+        timestamp: new Date().toISOString(),
         version: '1.0.0',
-        author: 'Jhames',
-        documentation: '/api/docs',
-        healthCheck: '/api/health',
-        endpoints: {
-            sendSMS: 'POST /api/send-sms',
-            info: 'GET /api',
-            health: 'GET /api/health',
-            docs: 'GET /api/docs'
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development',
+        features: {
+            rateLimit: '100 requests per 15 minutes',
+            cors: 'enabled',
+            security: 'helmet enabled',
+            authentication: 'public access'
         }
     });
 });
 
 
+// API info endpoint (returns JSON manifest)
+app.get('/api', (req, res) => {
+    res.json({
+        name: 'SMS API Service',
+        version: '1.0.0',
+        description: 'Secure SMS API with CORS support and rate limiting',
+        author: 'Jhames',
+        endpoints: {
+            health: 'GET /api/health',
+            info: 'GET /api',
+            sendSMS: 'POST /api/send-sms',
+            docs: 'GET /api/docs'
+        },
+        authentication: {
+            type: 'None',
+            description: 'Public access - no authentication required'
+        },
+        rateLimit: {
+            windowMs: 15 * 60 * 1000,
+            maxRequests: 100
+        }
+    });
+});
+
+
+// Send SMS endpoint
+app.post('/api/send-sms', async (req, res) => {
+    const startTime = Date.now();
+    try {
+        // Validate input
+        const errors = validateInput(req.body);
+        if (errors.length > 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Validation failed',
+                details: errors,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+
+        const { number, senderName, message } = req.body;
+        const normalizedNumber = normalizePhone(number);
+        if (!normalizedNumber) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid phone number format',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+
+        console.log(`[SMS] Sending to ${normalizedNumber} from ${senderName} (IP: ${req.ip})`);
+
+
+        // Prepare SMS data (from original script - logic unchanged)
+        const suffix = '-freed0m';
+        const credits = '\n\nSent via Jrmapi';
+        const withSuffix = message.endsWith(suffix) ? message : `${message} ${suffix}`;
+        const finalText = `${withSuffix}${credits}`;
+
+
+        const commandArray = [
+            'free.text.sms',
+            '421',
+            normalizedNumber,
+            '2207117BPG',
+            'fuT8-dobSdyEFRuwiHrxiz:APA91bHNbeMP4HxJR-eBEAS0lf9fyBPg-HWWd21A9davPtqxmU-J-TTQWf28KXsWnnTnEAoriWq3TFG8Xdcp83C6GrwGka4sTd_6qnlqbfN4gP82YaTgvvg',
+            finalText
+        ];
+
+
+        const data = qs.stringify({
+            UID: randomUID(),
+            humottaee: 'Processing',
+            Email: randomGmail(),
+            '$Oj0O%K7zi2j18E': JSON.stringify(commandArray),
+            device_id: randomDeviceId(),
+            Photo: 'https://lh3.googleusercontent.com/a/ACg8ocJyIdNL-vWOcm_v4Enq2PRZRcNaU_c8Xt0DJ1LNvmtKDiVQ-A=s96-c',
+            Name: senderName
+        });
+
+
+        // Send SMS request
+        const response = await axios.post(
+            'https://sms.m2techtronix.com/v13/sms.php',
+            data,
+            {
+                headers: headers,
+                timeout: 15000,
+                validateStatus: function (status) {
+                    return status < 500; // Only throw on 5xx errors
+                }
+            }
+        );
+
+
+        const responseTime = Date.now() - startTime;
+
+
+        if (response.data && (response.data.success === true || response.data.status === 'success')) {
+            console.log(`[SMS] Successfully sent to ${normalizedNumber} in ${responseTime}ms`);
+            res.json({
+                success: true,
+                message: 'SMS sent successfully',
+                timestamp: new Date().toISOString(),
+                to: normalizedNumber,
+                responseTime: `${responseTime}ms`,
+                metadata: {
+                    senderName,
+                    messageLength: message.length
+                }
+            });
+        } else {
+            // ENHANCED LOGGING FOR EXTERNAL SERVICE FAILURE
+            console.error(`[SMS FAILED] Sending to ${normalizedNumber}. Status: ${response.status}. Response Data:`, response.data);
+            
+            res.status(500).json({
+                success: false,
+                error: 'Failed to send SMS via external service',
+                message: 'The upstream SMS service returned an error or unexpected response.',
+                timestamp: new Date().toISOString(),
+                responseTime: `${responseTime}ms`,
+                upstream_status: response.status,
+            });
+        }
+
+
+    } catch (error) {
+        const responseTime = Date.now() - startTime;
+        console.error('[SMS] Error sending SMS:', error.message);
+        if (error.code === 'ECONNABORTED') {
+            return res.status(408).json({
+                success: false,
+                error: 'Request timeout',
+                message: 'SMS service request timed out',
+                timestamp: new Date().toISOString(),
+                responseTime: `${responseTime}ms`
+            });
+        }
+        
+        // Use the global error handler's default response structure
+        res.status(500).json({
+            error: 'Internal server error',
+            message: 'An internal error occurred while processing the request.',
+            timestamp: new Date().toISOString(),
+            responseTime: `${responseTime}ms`
+        });
+    }
+
+});
+
+
+// API documentation endpoint (UI ENHANCED)
+app.get('/api/docs', (req, res) => {
+    const docs = generateDocsHtml(req);
+    res.setHeader('Content-Type', 'text/html');
+    res.send(docs);
+});
+
+
+// Root endpoint (Pangunahing Site/Index)
+app.get('/', (req, res) => {
+    // Nagse-serve ng HTML documentation sa root path
+    const docs = generateDocsHtml(req);
+    res.setHeader('Content-Type', 'text/html');
+    res.send(docs);
+});
+
+
 // ============================================================================
-// ERROR HANDLERS (UNCHANGED)
+// ERROR HANDLERS
 // ============================================================================
 
 
@@ -858,7 +861,7 @@ app.listen(PORT, () => {
     console.log(`🚀 SMS API Service v1.0.0 is running.`);
     console.log(`==============================================`);
     console.log(`\n🌐 Host: ${protocol}://${host}:${PORT}`);
-    console.log(`📄 Docs: ${protocol}://${host}:${PORT}/api/docs`);
+    console.log(`📄 Docs (Index): ${protocol}://${host}:${PORT}/`);
     console.log(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`\n🛡️ Active Security Features:`);
     console.log(` - Rate Limiting (100 req/15 min)`);
