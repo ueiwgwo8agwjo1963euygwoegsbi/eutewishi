@@ -258,6 +258,11 @@ app.get('/docs', (req, res) => {
     res.sendFile(__dirname + '/public/docs.html');
 });
 
+// API Guide route - serve api-guide.html
+app.get('/guide', (req, res) => {
+    res.sendFile(__dirname + '/public/api-guide.html');
+});
+
 // 404 handler
 app.use('*', (req, res) => {
     res.status(404).json({
