@@ -1,16 +1,11 @@
 services:
   - type: web
-    name: sms-api
+    name: jrmph-freesmsapi
     env: node
     plan: free
     buildCommand: npm install
     startCommand: npm start
-    healthCheckPath: /api/health
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
-      # Add these environment variables in Render dashboard:
-      # - key: API_KEY
-      #   value: your-super-secret-api-key-here
-      # - key: ALLOWED_ORIGINS
-      #   value: https://yourdomain.com,https://app.yourdomain.com

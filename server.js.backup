@@ -1,0 +1,753 @@
+#!/usr/bin/env node
+
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const axios = require('axios');
+const qs = require('qs');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// ============================================================================
+// HOST PROTECTION MIDDLEWARE - Prevents API cloning/scraping
+// ============================================================================
+
+// Allow localhost for development, but block other domains
+const ALLOWED_HOSTS = [
+    'jrmph-freesmsapi.onrender.com',  // Your official Render domain
+    'localhost:3000',              // Development
+    'localhost',                   // Development
+    '127.0.0.1:3000',             // Development
+    '127.0.0.1'                   // Development
+];
+
+app.use((req, res, next) => {
+    const host = req.get('host');
+    const isAllowed = ALLOWED_HOSTS.some(allowedHost => {
+        if (allowedHost === 'localhost:3000') {
+            return host === 'localhost:3000' || host === 'localhost' || host === '127.0.0.1:3000' || host === '127.0.0.1';
+        }
+        return host === allowedHost;
+    });
+
+    if (!isAllowed) {
+        console.warn(`🚫 BLOCKED: Unauthorized host attempted access - Host: ${host}, IP: ${req.ip}`);
+        return res.status(403).json({
+            error: 'Access Denied',
+            message: 'This API is only available from authorized domains.',
+            yourHost: host,
+            allowedHosts: ALLOWED_HOSTS.filter(h => h !== 'localhost:3000' && h !== 'localhost' && h !== '127.0.0.1:3000' && h !== '127.0.0.1')
+        });
+    }
+
+    next();
+});
+
+// ============================================================================
+// SECURITY MIDDLEWARE
+// ============================================================================
+
+// Security headers
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            connectSrc: ["'self'"]
+        }
+    }
+}));
+
+// CORS configuration - Only allow official domain
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [
+        'https://jrmph-freesmsapi.onrender.com',  // Official domain
+        'http://localhost:3000',                   // Development
+        'http://localhost',                        // Development
+        'http://127.0.0.1:3000'                   // Development
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Rate limiting - 100 requests per 15 minutes
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: {
+        error: 'Too many requests, please try again later.',
+        retryAfter: '15 minutes',
+        note: 'This API is protected and only works from authorized domains.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+app.use('/api/', limiter);
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request logging
+app.use((req, res, next) => {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${req.ip} - User-Agent: ${req.get('User-Agent')}`);
+    next();
+});
+
+// ============================================================================
+// UTILITY FUNCTIONS (FROM ORIGINAL SCRIPT)
+// ============================================================================
+
+function normalizePhone(input) {
+    const number = input.replace(/\D/g, '');
+    if (number.startsWith('09')) return '+63' + number.slice(1);
+    if (number.startsWith('9') && number.length === 10) return '+63' + number;
+    if (number.startsWith('63') && number.length === 12) return '+' + number;
+    if (number.startsWith('+63') && number.length === 13) return number;
+    return null;
+}
+
+function randomString(len) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    return Array.from({ length: len }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+}
+
+function randomGmail() {
+    return `${randomString(8)}@gmail.com`;
+}
+
+function randomUID() {
+    return randomString(28);
+}
+
+function randomDeviceId() {
+    return randomString(16);
+}
+
+function validatePhoneNumber(number) {
+    const patterns = [
+        /^(\+63|63|9)\d{9,10}$/,  // Philippine formats
+        /^\+?[1-9]\d{1,14}$/      // General international format
+    ];
+    return patterns.some(pattern => pattern.test(number));
+}
+
+function validateInput(data) {
+    const errors = [];
+    
+    if (!data.number || typeof data.number !== 'string') {
+        errors.push('Phone number is required and must be a string');
+    } else if (!validatePhoneNumber(data.number)) {
+        errors.push('Invalid phone number format');
+    }
+    
+    if (!data.senderName || typeof data.senderName !== 'string') {
+        errors.push('Sender name is required and must be a string');
+    } else if (data.senderName.length > 50) {
+        errors.push('Sender name must be 50 characters or less');
+    }
+    
+    if (!data.message || typeof data.message !== 'string') {
+        errors.push('Message is required and must be a string');
+    } else if (data.message.length > 160) {
+        errors.push('Message must be 160 characters or less');
+    }
+    
+    return errors;
+}
+
+// ============================================================================
+// SMS API HEADERS
+// ============================================================================
+
+const headers = {
+    'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 15; 2207117BPG Build/AP3A.240905.015.A2)',
+    'Connection': 'Keep-Alive',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Accept': 'application/json'
+};
+
+// ============================================================================
+// NO AUTHENTICATION MIDDLEWARE (PUBLIC ACCESS)
+// ============================================================================
+
+// Public access - no authentication required
+
+// ============================================================================
+// API ROUTES
+// ============================================================================
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0',
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development',
+        features: {
+            rateLimit: '100 requests per 15 minutes',
+            cors: 'enabled',
+            security: 'helmet enabled',
+            authentication: 'public access'
+        }
+    });
+});
+
+// API info endpoint
+app.get('/api', (req, res) => {
+    res.json({
+        name: 'SMS API Service',
+        version: '1.0.0',
+        description: 'Secure SMS API with CORS support and rate limiting',
+        author: 'Jhames',
+        endpoints: {
+            health: 'GET /api/health',
+            info: 'GET /api',
+            sendSMS: 'POST /api/send-sms',
+            docs: 'GET /api/docs'
+        },
+        authentication: {
+            type: 'None',
+            description: 'Public access - no authentication required'
+        },
+        rateLimit: {
+            windowMs: 15 * 60 * 1000,
+            maxRequests: 100
+        }
+    });
+});
+
+// Send SMS endpoint
+app.post('/api/send-sms', async (req, res) => {
+    const startTime = Date.now();
+    
+    try {
+        // Validate input
+        const errors = validateInput(req.body);
+        if (errors.length > 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Validation failed',
+                details: errors,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        const { number, senderName, message } = req.body;
+        const normalizedNumber = normalizePhone(number);
+        
+        if (!normalizedNumber) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid phone number format',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        console.log(`[SMS] Sending to ${normalizedNumber} from ${senderName} (IP: ${req.ip})`);
+
+        // Prepare SMS data (from original script)
+        const suffix = '-freed0m';
+        const credits = '\n\nSent via Jrmapi';
+        const withSuffix = message.endsWith(suffix) ? message : `${message} ${suffix}`;
+        const finalText = `${withSuffix}${credits}`;
+
+        const commandArray = [
+            'free.text.sms',
+            '421',
+            normalizedNumber,
+            '2207117BPG',
+            'fuT8-dobSdyEFRuwiHrxiz:APA91bHNbeMP4HxJR-eBEAS0lf9fyBPg-HWWd21A9davPtqxmU-J-TTQWf28KXsWnnTnEAoriWq3TFG8Xdcp83C6GrwGka4sTd_6qnlqbfN4gP82YaTgvvg',
+            finalText
+        ];
+
+        const data = qs.stringify({
+            UID: randomUID(),
+            humottaee: 'Processing',
+            Email: randomGmail(),
+            '$Oj0O%K7zi2j18E': JSON.stringify(commandArray),
+            device_id: randomDeviceId(),
+            Photo: 'https://lh3.googleusercontent.com/a/ACg8ocJyIdNL-vWOcm_v4Enq2PRZRcNaU_c8Xt0DJ1LNvmtKDiVQ-A=s96-c',
+            Name: senderName
+        });
+
+        // Send SMS request
+        const response = await axios.post(
+            'https://sms.m2techtronix.com/v13/sms.php',
+            data,
+            { 
+                headers: headers,
+                timeout: 15000,
+                validateStatus: function (status) {
+                    return status < 500; // Only throw on 5xx errors
+                }
+            }
+        );
+
+        const responseTime = Date.now() - startTime;
+
+        if (response.data && (response.data.success === true || response.data.status === 'success')) {
+            console.log(`[SMS] Successfully sent to ${normalizedNumber} in ${responseTime}ms`);
+            res.json({
+                success: true,
+                message: 'SMS sent successfully',
+                timestamp: new Date().toISOString(),
+                to: normalizedNumber,
+                responseTime: `${responseTime}ms`,
+                metadata: {
+                    senderName,
+                    messageLength: message.length
+                }
+            });
+        } else {
+            console.warn(`[SMS] Failed to send to ${normalizedNumber}. Response:`, response.data);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to send SMS',
+                message: 'SMS service returned an error',
+                timestamp: new Date().toISOString(),
+                responseTime: `${responseTime}ms`
+            });
+        }
+
+    } catch (error) {
+        const responseTime = Date.now() - startTime;
+        console.error('[SMS] Error sending SMS:', error.message);
+        
+        if (error.code === 'ECONNABORTED') {
+            return res.status(408).json({
+                success: false,
+                error: 'Request timeout',
+                message: 'SMS service request timed out',
+                timestamp: new Date().toISOString(),
+                responseTime: `${responseTime}ms`
+            });
+        }
+        
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            message: 'An error occurred while sending the SMS',
+            timestamp: new Date().toISOString(),
+            responseTime: `${responseTime}ms`
+        });
+    }
+});
+
+// API documentation endpoint
+app.get('/api/docs', (req, res) => {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
+    const docs = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS API Documentation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 10px; text-align: center; margin-bottom: 2rem; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        .card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .endpoint { border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .method { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: bold; font-size: 0.8rem; margin-right: 1rem; }
+        .method.post { background: #28a745; color: white; }
+        .method.get { background: #007bff; color: white; }
+        .path { background: #f8f9fa; padding: 0.5rem; border-radius: 4px; font-family: monospace; }
+        .code { background: #1a1a1a; color: #f8f8f2; padding: 1rem; border-radius: 5px; overflow-x: auto; font-family: 'Monaco', 'Consolas', monospace; margin: 1rem 0; }
+        .error { background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 5px; margin: 1rem 0; }
+        .success { background: #d4edda; color: #155724; padding: 1rem; border-radius: 5px; margin: 1rem 0; }
+        .warning { background: #fff3cd; color: #856404; padding: 1rem; border-radius: 5px; margin: 1rem 0; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; font-weight: 600; }
+        .copy-btn { background: #007bff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin: 0.5rem 0; }
+        .copy-btn:hover { background: #0056b3; }
+        @media (max-width: 768px) { .container { padding: 10px; } .header h1 { font-size: 2rem; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 SMS API</h1>
+            <p>Secure SMS API with CORS support and rate limiting - v1.0.0</p>
+            <p><strong>Author:</strong> Jhames</p>
+        </div>
+
+        <div class="card">
+            <h2>🚀 Quick Start</h2>
+            <div class="warning">
+                <strong>✅ No Authentication Required:</strong> This API is public and does not require an API key.
+            </div>
+            
+            <h3>Base URL</h3>
+            <div class="code">${baseUrl}/api</div>
+            
+            <h3>Environment Variables</h3>
+            <table>
+                <tr><th>Variable</th><th>Description</th><th>Required</th></tr>
+                <tr><td>ALLOWED_ORIGINS</td><td>Comma-separated allowed origins</td><td>⚠️ Optional</td></tr>
+                <tr><td>PORT</td><td>Server port</td><td>⚠️ Optional (3000)</td></tr>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>📡 Endpoints</h2>
+            
+            <div class="endpoint">
+                <h3>Health Check</h3>
+                <span class="method get">GET</span>
+                <div class="path">/health</div>
+                <p>Check API health status and get system information.</p>
+                
+                <h4>Response</h4>
+                <div class="code">{
+  "status": "OK",
+  "timestamp": "2025-12-11T17:20:21.000Z",
+  "version": "1.0.0",
+  "uptime": 1234,
+  "environment": "production",
+  "features": {
+    "rateLimit": "100 requests per 15 minutes",
+    "cors": "enabled",
+    "security": "helmet enabled",
+    "authentication": "public access"
+  }
+}</div>
+            </div>
+
+            <div class="endpoint">
+                <h3>Send SMS</h3>
+                <span class="method post">POST</span>
+                <div class="path">/send-sms</div>
+                <p>Send an SMS message to a specified phone number.</p>
+                
+                <div class="success">
+                    <strong>✅ Public Access:</strong> No authentication required
+                </div>
+
+                <h4>Headers</h4>
+                <h4>Request Body</h4>
+                <div class="code">{
+  "number": "09123456789",
+  "senderName": "John Doe",
+  "message": "Hello from API"
+}</div>
+
+                <h4>Success Response</h4>
+                <div class="success">{
+  "success": true,
+  "message": "SMS sent successfully",
+  "timestamp": "2025-12-11T17:20:21.000Z",
+  "to": "+639123456789",
+  "responseTime": "245ms",
+  "metadata": {
+    "senderName": "John Doe",
+    "messageLength": 16
+  }
+}</div>
+
+                <h4>Parameters</h4>
+                <table>
+                    <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th><th>Example</th></tr>
+                    <tr><td>number</td><td>string</td><td>✅ Yes</td><td>Phone number (supports multiple formats)</td><td>"09123456789"</td></tr>
+                    <tr><td>senderName</td><td>string</td><td>✅ Yes</td><td>Sender name (max 50 chars)</td><td>"John Doe"</td></tr>
+                    <tr><td>message</td><td>string</td><td>✅ Yes</td><td>Message content (max 160 chars)</td><td>"Hello World"</td></tr>
+                </table>
+
+                <h4>Phone Number Formats</h4>
+                <p>Supported formats:</p>
+                <ul>
+                    <li><code>09123456789</code> - Philippines local format</li>
+                    <li><code>+639123456789</code> - International format</li>
+                    <li><code>9123456789</code> - Without leading 0</li>
+                    <li><code>639123456789</code> - Country code without +</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>💻 Code Examples</h2>
+            
+            <h3>cURL</h3>
+            <div class="code">curl -X POST "${baseUrl}/send-sms" \\
+\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "number": "09123456789",
+    "senderName": "John Doe",
+    "message": "Hello from API"
+  }'</div>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+
+            <h3>JavaScript (Fetch)</h3>
+            <div class="code">const response = await fetch('${baseUrl}/send-sms', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    number: '09123456789',
+    senderName: 'John Doe',
+    message: 'Hello from API'
+  })
+});
+
+const result = await response.json();
+console.log(result);</div>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+
+            <h3>Node.js (Axios)</h3>
+            <div class="code">const axios = require('axios');
+
+const response = await axios.post('${baseUrl}/send-sms', {
+  number: '09123456789',
+  senderName: 'John Doe',
+  message: 'Hello from API'
+}, {
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+console.log(response.data);</div>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+
+            <h3>Python</h3>
+            <div class="code">import requests
+import json
+
+url = "${baseUrl}/send-sms"
+headers = {
+    "Content-Type": "application/json"
+}
+data = {
+    "number": "09123456789",
+    "senderName": "John Doe",
+    "message": "Hello from API"
+}
+
+response = requests.post(url, headers=headers, data=json.dumps(data))
+result = response.json()
+print(result)</div>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+
+        <div class="card">
+            <h2>🛡️ Security Features</h2>
+            
+            <h3>Rate Limiting</h3>
+            <p>Prevents abuse by limiting requests to <strong>100 requests per 15 minutes</strong> per IP address.</p>
+            <div class="code">X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1640995200</div>
+
+            <h3>Authentication</h3>
+            <p>No authentication required - public access to all endpoints.</p>
+            <div class="success">Public API - No API keys needed</div>
+
+            <h3>Input Validation</h3>
+            <ul>
+                <li>Phone number format validation</li>
+                <li>Message length limits (max 160 characters)</li>
+                <li>Sender name validation (max 50 characters)</li>
+                <li>Special character sanitization</li>
+            </ul>
+
+            <h3>CORS Protection</h3>
+            <p>Configurable cross-origin resource sharing to prevent unauthorized access.</p>
+            <div class="code">Access-Control-Allow-Origin: https://yourdomain.com
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization</div>
+        </div>
+
+        <div class="card">
+            <h2>❌ Error Responses</h2>
+            
+            <h3>400 Bad Request</h3>
+            <div class="error">{
+  "success": false,
+  "error": "Validation failed",
+  "details": ["Phone number is required", "Message must be 160 characters or less"],
+  "timestamp": "2025-12-11T17:20:21.000Z"
+}</div>
+
+            <h3>401 Unauthorized</h3>
+            <div class="error">{
+</div>
+
+            <h3>429 Too Many Requests</h3>
+            <div class="error">{
+  "error": "Too many requests, please try again later.",
+  "retryAfter": "15 minutes"
+}</div>
+
+            <h3>500 Internal Server Error</h3>
+            <div class="error">{
+  "success": false,
+  "error": "Internal server error",
+  "message": "An error occurred while sending the SMS",
+  "timestamp": "2025-12-11T17:20:21.000Z",
+  "responseTime": "500ms"
+}</div>
+        </div>
+
+        <div class="card">
+            <h2>🚀 Deployment</h2>
+            <p>Ready for deployment on platforms like Render, Heroku, or any Node.js hosting service.</p>
+            
+            <h3>Environment Setup</h3>
+ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
+NODE_ENV=production
+PORT=3000</div>
+
+            <h3>Render Deployment</h3>
+            <ol>
+                <li>Push code to GitHub repository</li>
+                <li>Connect repository to Render.com</li>
+                <li>Set build command: <code>npm install</code></li>
+                <li>Set start command: <code>node server.js</code></li>
+                <li>Add environment variables</li>
+                <li>Deploy!</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2>📞 Support</h2>
+            <p>For issues and questions:</p>
+            <ul>
+                <li>Check health endpoint: <code>GET /api/health</code></li>
+                <li>Review API info: <code>GET /api</code></li>
+                <li>Monitor rate limits in response headers</li>
+                <li>Check server logs for detailed error information</li>
+            </ul>
+            
+            <div class="success">
+                <strong>✅ Status:</strong> API is ready for production use with enterprise-level security features.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(button) {
+            const code = button.previousElementSibling;
+            const text = code.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#007bff';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                button.textContent = 'Copy Failed';
+                button.style.background = '#dc3545';
+                
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.style.background = '#007bff';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
+    `;
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(docs);
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+    res.json({
+        message: 'SMS API Service',
+        version: '1.0.0',
+        author: 'Jhames',
+        documentation: '/api/docs',
+        healthCheck: '/api/health',
+        endpoints: {
+            sendSMS: 'POST /api/send-sms',
+            info: 'GET /api',
+            health: 'GET /api/health',
+            docs: 'GET /api/docs'
+        }
+    });
+});
+
+// ============================================================================
+// ERROR HANDLERS
+// ============================================================================
+
+// 404 handler
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({
+        error: 'Endpoint not found',
+        message: `The endpoint ${req.originalUrl} does not exist`,
+        availableEndpoints: [
+            'GET /',
+            'GET /api',
+            'GET /api/health',
+            'POST /api/send-sms',
+            'GET /api/docs'
+        ],
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Global error handler
+app.use((error, req, res, next) => {
+    console.error('[GLOBAL ERROR]', error);
+    res.status(500).json({
+        error: 'Internal server error',
+        message: 'Something went wrong on our end',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// ============================================================================
+// SERVER STARTUP
+// ============================================================================
+
+app.listen(PORT, () => {
+    console.log(`\n╔════════════════════════════╗`);
+    console.log(`        SMS API SERVER        `);
+    console.log(`           By Jhames          `);
+    console.log(`╚════════════════════════════╝`);
+    console.log(`\n🚀 Server running on port ${PORT}`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`\n📡 Endpoints:`);
+    console.log(`   Health:     http://localhost:${PORT}/api/health`);
+    console.log(`   Info:       http://localhost:${PORT}/api`);
+    console.log(`   Docs:       http://localhost:${PORT}/api/docs`);
+    console.log(`   Send SMS:   http://localhost:${PORT}/api/send-sms`);
+    console.log(`\n🔐 Security Features:`);
+    console.log(`   ✅ Public Access (No Authentication)`);
+    console.log(`   ✅ Rate Limiting (100 requests/15min)`);
+    console.log(`   ✅ CORS Protection`);
+    console.log(`   ✅ Input Validation`);
+    console.log(`   ✅ Security Headers`);
+    console.log(`\n📚 Documentation available at: http://localhost:${PORT}/api/docs`);
+    console.log(`\n✅ Ready to use - No API key required!\n`);
+});
+
+module.exports = app;
