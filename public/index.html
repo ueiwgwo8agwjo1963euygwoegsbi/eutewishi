@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JRM FreeSMS API - Welcome</title>
+    <title>FreeSMS Tool - Send SMS Instantly</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -20,6 +20,13 @@
             transform: translateY(-4px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
+        .success-message {
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -34,15 +41,15 @@
                     </svg>
                 </div>
                 <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-6">
-                    JRM FreeSMS API
+                    FreeSMS Tool
                 </h1>
                 <p class="text-xl md:text-2xl text-indigo-100 mb-8 max-w-3xl mx-auto">
-                    Secure SMS API with host-based protection and rate limiting. Send SMS messages instantly with no authentication required.
+                    Send SMS messages instantly using our powerful API. No registration, no limits, completely free to use.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="/docs" class="bg-white text-indigo-600 font-semibold px-8 py-4 rounded-lg hover:bg-gray-100 transition duration-200 text-lg">
-                        📚 View Documentation
-                    </a>
+                    <button onclick="scrollToSender()" class="bg-white text-indigo-600 font-semibold px-8 py-4 rounded-lg hover:bg-gray-100 transition duration-200 text-lg">
+                        📱 Send SMS Now
+                    </button>
                     <button onclick="testAPI()" class="bg-transparent border-2 border-white text-white font-semibold px-8 py-4 rounded-lg hover:bg-white hover:text-indigo-600 transition duration-200 text-lg">
                         🧪 Test API
                     </button>
@@ -51,181 +58,182 @@
         </div>
     </div>
 
-    <!-- Features Section -->
-    <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Why Choose JRM FreeSMS API?
-            </h2>
-            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-                Built with security, reliability, and ease of use in mind
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Security Feature -->
-            <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-indigo-500">
-                <div class="flex items-center mb-4">
-                    <svg class="w-8 h-8 text-indigo-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2L3.09 8.26V17.74L12 22L20.91 17.74V8.26L12 2M18.5 16.5L12 20L5.5 16.5V9.5L12 13L18.5 9.5V16.5Z"/>
-                    </svg>
-                    <h3 class="text-xl font-semibold text-gray-900">🔒 Host Protection</h3>
-                </div>
-                <p class="text-gray-600">
-                    Domain-based access control prevents unauthorized hosting and API cloning while allowing public usage.
-                </p>
-            </div>
-
-            <!-- Rate Limiting Feature -->
-            <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-orange-500">
-                <div class="flex items-center mb-4">
-                    <svg class="w-8 h-8 text-orange-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M13,2.03V2.05L13,4.05C17.39,4.59 20.5,8.58 19.96,12.97C19.5,16.61 16.64,19.5 13,19.93V21.93C18.5,21.38 22.5,16.5 21.95,11C21.5,6.25 17.73,2.5 13,2.03M11,2.06C9.05,2.25 7.19,3 5.67,4.26L7.1,5.74C8.22,4.84 9.57,4.26 11,4.06V2.06M4.26,5.67C3,7.19 2.25,9.04 2.05,11H4.05C4.24,9.58 4.8,8.23 5.69,7.1L4.26,5.67M2.06,13C2.26,14.96 3.03,16.81 4.27,18.33L5.69,16.9C4.81,15.77 4.24,14.42 4.06,13H2.06M7.1,18.37L5.67,19.74C7.18,21 9.04,21.79 11,22V20C9.58,19.82 8.23,19.25 7.1,18.37M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"/>
-                    </svg>
-                    <h3 class="text-xl font-semibold text-gray-900">⚡ Rate Limiting</h3>
-                </div>
-                <p class="text-gray-600">
-                    100 requests per 15 minutes per IP address to prevent abuse and ensure fair usage for all users.
-                </p>
-            </div>
-
-            <!-- No Auth Feature -->
-            <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-green-500">
-                <div class="flex items-center mb-4">
-                    <svg class="w-8 h-8 text-green-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"/>
-                    </svg>
-                    <h3 class="text-xl font-semibold text-gray-900">✅ No Authentication</h3>
-                </div>
-                <p class="text-gray-600">
-                    No API keys required. Simply make requests to our authorized domain to start sending SMS instantly.
-                </p>
-            </div>
-
-            <!-- CORS Feature -->
-            <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-blue-500">
-                <div class="flex items-center mb-4">
-                    <svg class="w-8 h-8 text-blue-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.45,15.18L22,7.31V19L22,21H2V3H4V15.54L9.5,6L16,9.78L20.24,2.45L21.97,3.45L16.74,12.5L10.23,8.75L4.31,19H6.57L10.96,11.44L17.45,15.18Z"/>
-                    </svg>
-                    <h3 class="text-xl font-semibold text-gray-900">🌐 CORS Protection</h3>
-                </div>
-                <p class="text-gray-600">
-                    Cross-origin requests are properly handled and restricted to authorized domains for enhanced security.
-                </p>
-            </div>
-
-            <!-- Input Validation Feature -->
-            <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-purple-500">
-                <div class="flex items-center mb-4">
-                    <svg class="w-8 h-8 text-purple-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
-                    </svg>
-                    <h3 class="text-xl font-semibold text-gray-900">✔️ Input Validation</h3>
-                </div>
-                <p class="text-gray-600">
-                    All phone numbers and messages are validated and sanitized to ensure data integrity and security.
-                </p>
-            </div>
-
-            <!-- Easy Integration Feature -->
-            <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-yellow-500">
-                <div class="flex items-center mb-4">
-                    <svg class="w-8 h-8 text-yellow-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"/>
-                    </svg>
-                    <h3 class="text-xl font-semibold text-gray-900">🚀 Easy Integration</h3>
-                </div>
-                <p class="text-gray-600">
-                    Simple REST API with comprehensive documentation and code examples in multiple programming languages.
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Start Section -->
-    <div class="bg-gray-100 py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                    Quick Start Guide
-                </h2>
-                <p class="text-xl text-gray-600">
-                    Send your first SMS in under 30 seconds
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center">
-                    <div class="bg-indigo-500 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                        1
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Check the Docs</h3>
-                    <p class="text-gray-600">
-                        Visit our comprehensive documentation to understand the API endpoints and parameters.
-                    </p>
-                </div>
-
-                <div class="text-center">
-                    <div class="bg-indigo-500 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                        2
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Make a Request</h3>
-                    <p class="text-gray-600">
-                        Send a POST request to our SMS endpoint with the recipient number and message.
-                    </p>
-                </div>
-
-                <div class="text-center">
-                    <div class="bg-indigo-500 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                        3
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Receive Response</h3>
-                    <p class="text-gray-600">
-                        Get instant confirmation with response time and delivery status information.
-                    </p>
-                </div>
-            </div>
-
-            <div class="text-center mt-12">
-                <a href="/docs" class="bg-indigo-600 text-white font-semibold px-8 py-4 rounded-lg hover:bg-indigo-700 transition duration-200 text-lg inline-block">
-                    📖 Start with Documentation
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- API Test Section -->
-    <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <!-- SMS Sender Section -->
+    <div class="max-w-4xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Try It Now
+                Send SMS Instantly
             </h2>
             <p class="text-xl text-gray-600">
-                Test the API directly from your browser
+                Fill in the form below and send your SMS message
             </p>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl shadow-lg p-8">
             <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                    <input type="text" id="testPhone" placeholder="+639123456789" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Recipient Phone Number</label>
+                        <input type="text" id="phoneNumber" placeholder="+639123456789" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <p class="text-xs text-gray-500 mt-1">Use international format (e.g., +639123456789)</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sender Name (Optional)</label>
+                        <input type="text" id="senderName" placeholder="Your Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                    <textarea id="testMessage" placeholder="Hello from JRM FreeSMS API!" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    <textarea id="messageText" placeholder="Type your message here..." rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Max 160 characters per SMS</p>
                 </div>
-                <button onclick="sendTestSMS()" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition duration-200">
-                    📱 Send Test SMS
+                <button onclick="sendSMS()" id="sendButton" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition duration-200">
+                    📱 Send SMS
                 </button>
             </div>
             
-            <div id="testResult" class="mt-6 hidden">
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <h4 class="font-semibold text-gray-900 mb-2">Response:</h4>
-                    <pre id="resultContent" class="text-sm text-gray-700 overflow-x-auto"></pre>
+            <div id="resultMessage" class="mt-6 hidden">
+                <div id="resultContent" class="border border-gray-200 rounded-lg p-4">
+                    <!-- Results will be inserted here -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="bg-gray-100 py-16">
+        <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Why Use Our FreeSMS Tool?
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Built with security, reliability, and ease of use in mind
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Free Feature -->
+                <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-green-500">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-8 h-8 text-green-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"/>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-900">🆓 Completely Free</h3>
+                    </div>
+                    <p class="text-gray-600">
+                        No hidden charges, no subscription fees. Send as many SMS messages as you need without any cost.
+                    </p>
+                </div>
+
+                <!-- Instant Delivery Feature -->
+                <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-blue-500">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-8 h-8 text-blue-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-900">⚡ Instant Delivery</h3>
+                    </div>
+                    <p class="text-gray-600">
+                        Messages are delivered instantly to recipients worldwide. No waiting time, no delays.
+                    </p>
+                </div>
+
+                <!-- Simple Interface Feature -->
+                <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-purple-500">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-8 h-8 text-purple-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"/>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-900">🎯 Simple Interface</h3>
+                    </div>
+                    <p class="text-gray-600">
+                        Clean, intuitive interface that anyone can use. No technical knowledge required.
+                    </p>
+                </div>
+
+                <!-- Global Coverage Feature -->
+                <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-orange-500">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-8 h-8 text-orange-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.45,15.18L22,7.31V19L22,21H2V3H4V15.54L9.5,6L16,9.78L20.24,2.45L21.97,3.45L16.74,12.5L10.23,8.75L4.31,19H6.57L10.96,11.44L17.45,15.18Z"/>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-900">🌍 Global Coverage</h3>
+                    </div>
+                    <p class="text-gray-600">
+                        Send SMS messages to any phone number worldwide with comprehensive international support.
+                    </p>
+                </div>
+
+                <!-- Secure Feature -->
+                <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-red-500">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-8 h-8 text-red-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-900">🔒 Secure & Private</h3>
+                    </div>
+                    <p class="text-gray-600">
+                        Your messages are processed securely with no data storage or privacy concerns.
+                    </p>
+                </div>
+
+                <!-- No Registration Feature -->
+                <div class="bg-white p-8 rounded-xl shadow-lg card-hover border-t-4 border-yellow-500">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-8 h-8 text-yellow-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M13,2.03V2.05L13,4.05C17.39,4.59 20.5,8.58 19.96,12.97C19.5,16.61 16.64,19.5 13,19.93V21.93C18.5,21.38 22.5,16.5 21.95,11C21.5,6.25 17.73,2.5 13,2.03M11,2.06C9.05,2.25 7.19,3 5.67,4.26L7.1,5.74C8.22,4.84 9.57,4.26 11,4.06V2.06Z"/>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-900">⚡ No Registration</h3>
+                    </div>
+                    <p class="text-gray-600">
+                        Start using immediately without any sign-up process, forms, or personal information required.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                How It Works
+            </h2>
+            <p class="text-xl text-gray-600">
+                Send SMS in just 3 simple steps
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="bg-indigo-500 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                    1
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Enter Phone Number</h3>
+                <p class="text-gray-600">
+                    Enter the recipient's phone number in international format (e.g., +639123456789).
+                </p>
+            </div>
+
+            <div class="text-center">
+                <div class="bg-indigo-500 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                    2
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Write Your Message</h3>
+                <p class="text-gray-600">
+                    Type your message in the text area. Keep it under 160 characters for best results.
+                </p>
+            </div>
+
+            <div class="text-center">
+                <div class="bg-indigo-500 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                    3
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Send Instantly</h3>
+                <p class="text-gray-600">
+                    Click the send button and your message will be delivered instantly to the recipient.
+                </p>
             </div>
         </div>
     </div>
@@ -234,91 +242,163 @@
     <footer class="bg-gray-900 text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div class="mb-8">
-                <h3 class="text-2xl font-bold mb-4">JRM FreeSMS API</h3>
+                <h3 class="text-2xl font-bold mb-4">FreeSMS Tool</h3>
                 <p class="text-gray-400">
-                    Secure SMS API service by Jhames Martin
+                    Send SMS messages instantly, completely free
                 </p>
-            </div>
-            
-            <div class="flex justify-center space-x-6 mb-8">
-                <a href="https://github.com/jrmph" target="_blank" class="text-gray-400 hover:text-white transition duration-150">
-                    GitHub
-                </a>
-                <a href="https://www.facebook.com/jhames.rhonnielle.martin" target="_blank" class="text-gray-400 hover:text-white transition duration-150">
-                    Facebook
-                </a>
-                <a href="/docs" class="text-gray-400 hover:text-white transition duration-150">
-                    Documentation
-                </a>
             </div>
             
             <div class="border-t border-gray-800 pt-8">
                 <p class="text-gray-400 text-sm">
-                    &copy; 2025 JRM FreeSMS API by Jhames Martin. All rights reserved.
+                    &copy; 2025 FreeSMS Tool. All rights reserved.
                 </p>
             </div>
         </div>
     </footer>
 
     <script>
-        function testAPI() {
-            // Scroll to test section
-            document.querySelector('[id="testPhone"]').scrollIntoView({ behavior: 'smooth' });
-            document.querySelector('[id="testPhone"]').focus();
+        const API_BASE_URL = 'https://jrmph-freesmsapi-bvyo.onrender.com';
+
+        function scrollToSender() {
+            document.getElementById('phoneNumber').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('phoneNumber').focus();
         }
 
-        async function sendTestSMS() {
-            const phone = document.getElementById('testPhone').value;
-            const message = document.getElementById('testMessage').value;
-            const resultDiv = document.getElementById('testResult');
-            const resultContent = document.getElementById('resultContent');
+        function testAPI() {
+            // Pre-fill with test data
+            document.getElementById('phoneNumber').value = '+639123456789';
+            document.getElementById('messageText').value = 'Hello from FreeSMS Tool! This is a test message.';
+            scrollToSender();
+        }
 
-            if (!phone || !message) {
-                alert('Please enter both phone number and message');
+        function validatePhoneNumber(phone) {
+            // Basic validation for international format
+            const phoneRegex = /^\+[1-9]\d{1,14}$/;
+            return phoneRegex.test(phone);
+        }
+
+        function showResult(message, isSuccess = false) {
+            const resultDiv = document.getElementById('resultMessage');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultContent.innerHTML = message;
+            resultContent.className = `border border-gray-200 rounded-lg p-4 ${isSuccess ? 'success-message' : ''}`;
+            
+            if (isSuccess) {
+                resultContent.classList.add('bg-green-50', 'border-green-200');
+                resultContent.classList.remove('bg-red-50', 'border-red-200');
+            } else {
+                resultContent.classList.add('bg-red-50', 'border-red-200');
+                resultContent.classList.remove('bg-green-50', 'border-green-200');
+            }
+            
+            resultDiv.classList.remove('hidden');
+        }
+
+        async function sendSMS() {
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const messageText = document.getElementById('messageText').value.trim();
+            const senderName = document.getElementById('senderName').value.trim();
+            const sendButton = document.getElementById('sendButton');
+
+            // Validation
+            if (!phoneNumber || !messageText) {
+                showResult('❌ Please fill in both phone number and message fields.');
+                return;
+            }
+
+            if (!validatePhoneNumber(phoneNumber)) {
+                showResult('❌ Please enter a valid phone number in international format (e.g., +639123456789).');
+                return;
+            }
+
+            if (messageText.length > 160) {
+                showResult('❌ Message is too long. Please keep it under 160 characters.');
                 return;
             }
 
             // Show loading state
-            const button = event.target;
-            const originalText = button.textContent;
-            button.textContent = '⏳ Sending...';
-            button.disabled = true;
+            const originalText = sendButton.innerHTML;
+            sendButton.innerHTML = '⏳ Sending...';
+            sendButton.disabled = true;
 
             try {
-                const response = await fetch('/api/send-sms', {
+                // Prepare the message with sender name if provided
+                const finalMessage = senderName ? `${senderName}: ${messageText}` : messageText;
+
+                const response = await fetch(`${API_BASE_URL}/api/send-sms`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        to: phone,
-                        message: message
+                        to: phoneNumber,
+                        message: finalMessage
                     })
                 });
 
                 const result = await response.json();
                 
-                resultContent.textContent = JSON.stringify(result, null, 2);
-                resultDiv.classList.remove('hidden');
-                
-                if (result.success) {
-                    resultContent.className = 'text-sm text-green-700 overflow-x-auto';
+                if (response.ok && result.success) {
+                    showResult(`
+                        <div class="text-green-700">
+                            <h4 class="font-semibold text-lg mb-2">✅ SMS Sent Successfully!</h4>
+                            <p><strong>Recipient:</strong> ${phoneNumber}</p>
+                            <p><strong>Message:</strong> ${finalMessage}</p>
+                            <p><strong>Status:</strong> ${result.message || 'Message delivered successfully'}</p>
+                            <p class="text-sm text-green-600 mt-2">Response time: ${result.responseTime || 'N/A'}ms</p>
+                        </div>
+                    `, true);
+                    
+                    // Clear the form on success
+                    document.getElementById('messageText').value = '';
                 } else {
-                    resultContent.className = 'text-sm text-red-700 overflow-x-auto';
+                    showResult(`
+                        <div class="text-red-700">
+                            <h4 class="font-semibold text-lg mb-2">❌ Failed to Send SMS</h4>
+                            <p><strong>Error:</strong> ${result.message || result.error || 'Unknown error occurred'}</p>
+                            <p class="text-sm text-red-600 mt-2">Please check the phone number and try again.</p>
+                        </div>
+                    `, false);
                 }
 
             } catch (error) {
-                resultContent.textContent = JSON.stringify({
-                    error: 'Network Error',
-                    message: error.message
-                }, null, 2);
-                resultDiv.classList.remove('hidden');
-                resultContent.className = 'text-sm text-red-700 overflow-x-auto';
+                showResult(`
+                    <div class="text-red-700">
+                        <h4 class="font-semibold text-lg mb-2">❌ Network Error</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p class="text-sm text-red-600 mt-2">Please check your internet connection and try again.</p>
+                    </div>
+                `, false);
             } finally {
-                button.textContent = originalText;
-                button.disabled = false;
+                sendButton.innerHTML = originalText;
+                sendButton.disabled = false;
             }
         }
+
+        // Allow Enter key to submit
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && (e.target.id === 'phoneNumber' || e.target.id === 'messageText')) {
+                sendSMS();
+            }
+        });
+
+        // Auto-hide result after 10 seconds
+        function autoHideResult() {
+            const resultDiv = document.getElementById('resultMessage');
+            if (!resultDiv.classList.contains('hidden')) {
+                setTimeout(() => {
+                    resultDiv.classList.add('hidden');
+                }, 10000);
+            }
+        }
+
+        // Add auto-hide to showResult function
+        const originalShowResult = showResult;
+        showResult = function(message, isSuccess) {
+            originalShowResult(message, isSuccess);
+            setTimeout(autoHideResult, 10000);
+        };
     </script>
 
 </body>

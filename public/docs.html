@@ -3,7 +3,7 @@
 <head>
     <!-- Critical for mobile responsiveness -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JRM FreeSMS API Documentation - v1.0.0</title>
+    <title>JRM FreeSMS API Documentation - v1.0.0-m2tech</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -60,11 +60,11 @@
                 <!-- Icon: Speech Bubble/Message -->
                 <svg class="w-8 h-8 text-indigo-400" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.505A9.761 9.761 0 0112 4c4.97 0 9 3.582 9 8z"/></svg>
                 <h1 class="text-3xl font-extrabold text-white tracking-tight">
-                    JRM FreeSMS API Reference
+                    JRM FreeSMS API Reference (M2Tech)
                 </h1>
             </div>
             <div class="flex items-center space-x-4 mt-4 md:mt-0">
-                <span class="text-sm font-medium text-slate-300 bg-slate-700 px-3 py-1 rounded-full shadow-inner">Version 1.0.0</span>
+                <span class="text-sm font-medium text-slate-300 bg-slate-700 px-3 py-1 rounded-full shadow-inner">Version 1.0.0-m2tech</span>
                 <a href="/" class="text-sm font-medium text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-full transition duration-150">← Back to API</a>
             </div>
         </div>
@@ -78,7 +78,7 @@
             <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border-t-4 border-indigo-500">
                 <h2 class="text-2xl font-semibold text-gray-900 section-header">Overview & Quick Start</h2>
                 <p class="text-gray-600 mb-6">
-                    This is a secure, rate-limited public API for sending SMS messages. The API is designed for high reliability and includes robust security features like host-based protection, rate limiting, CORS protection, and input validation.
+                    This is a secure, rate-limited public API for sending SMS messages using M2Tech Tronix service. The API is designed for high reliability and includes robust security features like host-based protection, rate limiting, CORS protection, and input validation.
                 </p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -89,11 +89,11 @@
                         </div>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Authentication Status</h3>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">SMS Provider</h3>
                         <div class="bg-green-100 text-green-800 font-medium px-4 py-3 rounded-lg flex items-center shadow-inner text-sm">
                             <!-- Icon: Lock Open -->
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944c-1.278 0-2.529.288-3.67.844-1.141.556-2.138 1.378-2.948 2.378S3.333 7.6 3.09 8.889C2.846 10.178 2.89 11.511 3.2 12.822c.311 1.311.916 2.56 1.764 3.652 1.696 2.186 3.992 3.652 6.551 4.363 2.559-.711 4.855-2.177 6.551-4.363.848-1.092 1.453-2.341 1.764-3.652.31-1.311.354-2.644.11-3.933A11.955 11.955 0 0112 2.944z"/></svg>
-                            Public Access: No API Key Required (Host-Protected)
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"/></svg>
+                            M2Tech Tronix Integration (No External API Keys Required)
                         </div>
                     </div>
                 </div>
@@ -119,7 +119,7 @@
                     <span class="method-badge post">POST</span>
                     <span class="path-display font-mono text-lg">/api/send-sms</span>
                 </div>
-                <p class="text-gray-600 mb-6">Initiates the transmission of an SMS message to a specified mobile number. All inputs are validated for format and length.</p>
+                <p class="text-gray-600 mb-6">Initiates the transmission of an SMS message to a specified mobile number using M2Tech service. All inputs are validated for format and length.</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <!-- Request -->
@@ -128,7 +128,8 @@
                         <div class="code-block text-sm">
                             <pre>{
     "to": "+639123456789",
-    "message": "Hello from JRM FreeSMS API!"
+    "message": "Hello from JRM FreeSMS API!",
+    "senderName": "MyApp"
 }</pre>
                         </div>
 
@@ -156,6 +157,12 @@
                                         <td class="px-3 py-2 whitespace-nowrap"><span class="text-green-600 font-bold">YES</span></td>
                                         <td class="px-3 py-2">The message content (max 160 characters).</td>
                                     </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap font-medium text-gray-900">senderName</td>
+                                        <td class="px-3 py-2 whitespace-nowrap">string</td>
+                                        <td class="px-3 py-2 whitespace-nowrap"><span class="text-green-600 font-bold">YES</span></td>
+                                        <td class="px-3 py-2">Sender name/identifier for the message (required by M2Tech service).</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -168,11 +175,12 @@
                             <pre>{
     "success": true,
     "message": "SMS sent successfully",
-    "timestamp": "2025-12-11T20:34:10.000Z",
+    "timestamp": "2025-12-11T21:22:36.000Z",
     "to": "+639123456789",
     "responseTime": "245ms",
     "metadata": {
-        "messageLength": 32
+        "messageLength": 32,
+        "senderName": "MyApp"
     }
 }</pre>
                         </div>
@@ -185,7 +193,7 @@
     "error": "Access Denied",
     "message": "This API is only available from authorized domains.",
     "yourHost": "unauthorized-domain.com",
-    "allowedHosts": ["jrmph-freesmsapi.onrender.com"]
+    "allowedHosts": ["jrmph-freesmsapi-bvyo.onrender.com"]
 }</pre>
                         </div>
 
@@ -202,8 +210,8 @@
                         <div class="code-block !bg-red-800 text-red-200 text-sm">
                             <pre>{
     "success": false,
-    "error": "Invalid phone number format",
-    "message": "Please provide a valid Philippine phone number"
+    "error": "Sender name required",
+    "message": "Sender name cannot be empty"
 }</pre>
                         </div>
                     </div>
@@ -224,8 +232,9 @@
                 <div class="code-block !bg-green-800 text-green-200 text-sm">
                     <pre>{
     "status": "API is running",
-    "timestamp": "2025-12-11T20:34:10.000Z",
-    "version": "1.0.0"
+    "timestamp": "2025-12-11T21:22:36.000Z",
+    "version": "1.0.0-m2tech",
+    "smsProvider": "m2techtronix"
 }</pre>
                 </div>
             </div>
@@ -242,7 +251,8 @@
 -H "Content-Type: application/json" \
 -d '{
     "to": "+639123456789",
-    "message": "Hello from JRM FreeSMS API!"
+    "message": "Hello from JRM FreeSMS API!",
+    "senderName": "MyApp"
 }'</pre>
                     <button class="copy-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-md text-xs transition duration-150" onclick="copyCode(this)">Copy</button>
                 </div>
@@ -257,7 +267,8 @@
     },
     body: JSON.stringify({
         to: '+639123456789',
-        message: 'Hello from JRM FreeSMS API!'
+        message: 'Hello from JRM FreeSMS API!',
+        senderName: 'MyApp'
     })
 });
 
@@ -274,7 +285,8 @@ console.log(result);</pre>
 url = "[[BASE_URL]]/api/send-sms"
 data = {
     "to": "+639123456789",
-    "message": "Hello from JRM FreeSMS API!"
+    "message": "Hello from JRM FreeSMS API!",
+    "senderName": "MyApp"
 }
 
 response = requests.post(url, json=data)
@@ -288,7 +300,8 @@ print(response.json())</pre>
                     <pre id="php-example">$url = "[[BASE_URL]]/api/send-sms";
 $data = [
     "to" => "+639123456789",
-    "message" => "Hello from JRM FreeSMS API!"
+    "message" => "Hello from JRM FreeSMS API!",
+    "senderName" => "MyApp"
 ];
 
 $ch = curl_init();
@@ -306,7 +319,48 @@ echo $response;</pre>
                 </div>
             </div>
 
-            <!-- 5. Domain Protection Info -->
+            <!-- 5. M2Tech Service Info -->
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border-t-4 border-green-500">
+                <h2 class="text-2xl font-semibold text-gray-900 section-header">M2Tech Service Integration</h2>
+                <p class="text-gray-600 mb-6">
+                    Your SMS API now uses the M2Tech Tronix service for reliable SMS delivery. This service provides built-in Firebase Cloud Messaging integration and robust Philippine mobile number support.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">✅ Service Details</h3>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <ul class="text-green-800 text-sm space-y-2">
+                                <li>• <strong>Endpoint:</strong> sms.m2techtronix.com</li>
+                                <li>• <strong>Device ID:</strong> 2207117BPG</li>
+                                <li>• <strong>Service:</strong> Firebase Cloud Messaging</li>
+                                <li>• <strong>Country Support:</strong> Philippines</li>
+                                <li>• <strong>Max Message:</strong> 160 characters</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">📱 Phone Number Formats</h3>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <ul class="text-blue-800 text-sm space-y-1">
+                                <li>• <code>09123456789</code> → <code>+639123456789</code></li>
+                                <li>• <code>9123456789</code> → <code>+639123456789</code></li>
+                                <li>• <code>639123456789</code> → <code>+639123456789</code></li>
+                                <li>• <code>+639123456789</code> → <code>+639123456789</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <h4 class="font-semibold text-yellow-800 mb-2">💡 New Requirement</h4>
+                    <p class="text-yellow-700 text-sm">
+                        The <code>senderName</code> parameter is now required for all SMS requests. This identifies the sender/app sending the message and is required by the M2Tech service.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 6. Domain Protection Info -->
             <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border-t-4 border-orange-500">
                 <h2 class="text-2xl font-semibold text-gray-900 section-header">Domain Protection</h2>
                 <p class="text-gray-600 mb-6">
@@ -318,7 +372,7 @@ echo $response;</pre>
                         <h3 class="text-lg font-semibold text-gray-700 mb-3">✅ Allowed Domains</h3>
                         <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                             <ul class="text-green-800 text-sm space-y-1">
-                                <li>• <code>jrmph-freesmsapi.onrender.com</code></li>
+                                <li>• <code>jrmph-freesmsapi-bvyo.onrender.com</code></li>
                                 <li>• <code>localhost:3000</code> (development)</li>
                                 <li>• <code>127.0.0.1:3000</code> (development)</li>
                             </ul>
@@ -339,13 +393,13 @@ echo $response;</pre>
                 <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <h4 class="font-semibold text-blue-800 mb-2">💡 How to Use</h4>
                     <p class="text-blue-700 text-sm">
-                        Simply make requests to <code>jrmph-freesmsapi.onrender.com</code> from any website, mobile app, or service. 
+                        Simply make requests to <code>jrmph-freesmsapi-bvyo.onrender.com</code> from any website, mobile app, or service. 
                         The API will work as long as you use the correct domain. This prevents unauthorized hosting while allowing public usage.
                     </p>
                 </div>
             </div>
 
-            <!-- 6. Author & Contact -->
+            <!-- 7. Author & Contact -->
             <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border-t-4 border-indigo-500">
                 <h2 class="text-2xl font-semibold text-gray-900 section-header">Author & Contact</h2>
                 <div class="flex flex-col space-y-4 text-gray-700">
